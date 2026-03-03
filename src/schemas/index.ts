@@ -16,6 +16,7 @@ export const WorkoutPlanSchema = z.object({
       weekDay: z.enum(WeekDay),
       isRest: z.boolean(),
       estimatedDurationInSeconds: z.number(),
+      coverImageUrl: z.url().optional(),
       exercises: z.array(
         z.object({
           order: z.number(),
