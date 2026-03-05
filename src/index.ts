@@ -1,4 +1,3 @@
-// Import the framework and instantiate it
 import "dotenv/config";
 
 import fastifyCors from "@fastify/cors";
@@ -14,6 +13,10 @@ import {
 import z from "zod";
 
 import { auth } from "./lib/auth.js";
+import { aiRoutes } from "./routes/ai.js";
+import { homeRoutes } from "./routes/home.js";
+import { meRoutes } from "./routes/me.js";
+import { statsRoutes } from "./routes/stats.js";
 import { workoutPlanRoutes } from "./routes/workout-plan.js";
 
 const app = Fastify({
@@ -26,8 +29,8 @@ app.setSerializerCompiler(serializerCompiler);
 await app.register(fastifySwagger, {
   openapi: {
     info: {
-      title: "Treinos API",
-      description: "API para o sistema de treinos",
+      title: "Bootcamp Treinos API",
+      description: "API para o bootcamp de treinos do FSC",
       version: "1.0.0",
     },
     servers: [
@@ -38,11 +41,6 @@ await app.register(fastifySwagger, {
     ],
   },
   transform: jsonSchemaTransform,
-  // You can also create transform with custom skiplist of endpoints that should not be included in the specification:
-  //
-  // transform: createJsonSchemaTransform({
-  //   skipList: [ '/documentation/static/*' ]
-  // })
 });
 
 await app.register(fastifyCors, {
@@ -55,8 +53,8 @@ await app.register(fastifyApiReference, {
   configuration: {
     sources: [
       {
-        title: "Gestão de Treinos API",
-        slug: "gestao-treinos-api",
+        title: "Bootcamp Treinos API",
+        slug: "bootcamp-treinos-api",
         url: "/swagger.json",
       },
       {
@@ -68,8 +66,13 @@ await app.register(fastifyApiReference, {
   },
 });
 
+// RESTful
 // Routes
+await app.register(homeRoutes, { prefix: "/home" });
+await app.register(meRoutes, { prefix: "/me" });
+await app.register(statsRoutes, { prefix: "/stats" });
 await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
+await app.register(aiRoutes, { prefix: "/ai" });
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
@@ -82,13 +85,12 @@ app.withTypeProvider<ZodTypeProvider>().route({
   },
 });
 
-// Declare a route
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
   url: "/",
   schema: {
-    description: "Hello World!",
-    tags: ["hello World"],
+    description: "Hello world",
+    tags: ["Hello World"],
     response: {
       200: z.object({
         message: z.string(),
@@ -97,15 +99,17 @@ app.withTypeProvider<ZodTypeProvider>().route({
   },
   handler: () => {
     return {
-      message: "Hello World!",
+      message: "Hello World",
     };
   },
 });
 
-// Register authentication endpoint
 app.route({
   method: ["GET", "POST"],
   url: "/api/auth/*",
+  schema: {
+    hide: true,
+  },
   async handler(request, reply) {
     try {
       // Construct request URL
@@ -138,12 +142,9 @@ app.route({
   },
 });
 
-// Run the server!
 try {
   await app.listen({ port: Number(process.env.PORT) || 3000 });
 } catch (err) {
   app.log.error(err);
   process.exit(1);
 }
-
-console.log("Server is running on port 3000");
